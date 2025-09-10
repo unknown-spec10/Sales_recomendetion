@@ -1,6 +1,6 @@
 """
 Streamlit Frontend for AI-Powered Product Recommendation System
-Cloud-ready version with embedded AI logic
+Cloud-ready version with demo data (no database required)
 """
 
 import streamlit as st
@@ -8,8 +8,6 @@ import os
 import pandas as pd
 from typing import Dict, List
 from groq import Groq
-import asyncio
-import asyncpg
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -27,19 +25,9 @@ st.set_page_config(
 try:
     # Streamlit Cloud secrets
     GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY", ""))
-    DB_HOST = st.secrets.get("DB_HOST", os.getenv("DB_HOST", "localhost"))
-    DB_PORT = int(st.secrets.get("DB_PORT", os.getenv("DB_PORT", 5432)))
-    DB_NAME = st.secrets.get("DB_NAME", os.getenv("DB_NAME", "sales_recommendation"))
-    DB_USER = st.secrets.get("DB_USER", os.getenv("DB_USER", "postgres"))
-    DB_PASSWORD = st.secrets.get("DB_PASSWORD", os.getenv("DB_PASSWORD", ""))
 except Exception:
     # Fallback to environment variables
     GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-    DB_HOST = os.getenv("DB_HOST", "localhost")
-    DB_PORT = int(os.getenv("DB_PORT", 5432))
-    DB_NAME = os.getenv("DB_NAME", "sales_recommendation")
-    DB_USER = os.getenv("DB_USER", "postgres")
-    DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 
 # Initialize Groq client
 try:
@@ -52,83 +40,19 @@ except Exception as e:
     groq_client = None
     st.error(f"❌ Error initializing Groq client: {e}")
 
-# Database configuration
-DB_CONFIG = {
-    'host': DB_HOST,
-    'port': DB_PORT,
-    'database': DB_NAME,
-    'user': DB_USER,
-    'password': DB_PASSWORD
-}
+# Demo Data Functions (no database required)
 
-# Global database pool
-db_pool = None
-
-async def init_db_pool():
-    """Initialize database connection pool"""
-    global db_pool
-    try:
-        db_pool = await asyncpg.create_pool(**DB_CONFIG, min_size=1, max_size=5)
-        return True
-    except Exception as e:
-        st.error(f"❌ Database connection failed: {e}")
-        return False
-
-async def get_companies_from_db():
-    """Get all companies from database"""
-    if not db_pool:
-        await init_db_pool()
-    if not db_pool:
-        return get_demo_companies()
-    
-    try:
-        async with db_pool.acquire() as conn:
-            companies = await conn.fetch("SELECT DISTINCT name FROM companies ORDER BY name LIMIT 100")
-            return [row['name'] for row in companies]
-    except Exception as e:
-        st.warning(f"⚠️ Database error: {e}. Using demo data.")
-        return get_demo_companies()
-
-async def get_products_from_db():
-    """Get all products from database"""
-    if not db_pool:
-        await init_db_pool()
-    if not db_pool:
-        return get_demo_products()
-    
-    try:
-        async with db_pool.acquire() as conn:
-            products = await conn.fetch("""
-                SELECT p.id, c.name as company_name, p.product_line, p.description
-                FROM products p 
-                JOIN companies c ON p.company_id = c.id 
-                WHERE p.is_active = true
-                ORDER BY c.name, p.product_line
-                LIMIT 1000
-            """)
-            
-            if products:
-                product_list = []
-                for product in products:
-                    product_list.append({
-                        "id": str(product['id']),
-                        "company_name": product['company_name'],
-                        "product_line": product['product_line'],
-                        "description": product.get('description', ''),
-                    })
-                return product_list
-            else:
-                return get_demo_products()
-    except Exception as e:
-        st.warning(f"⚠️ Database error: {e}. Using demo data.")
-        return get_demo_products()
-
-async def get_db_stats():
-    """Get database statistics"""
-    if not db_pool:
-        await init_db_pool()
-    if not db_pool:
-        return {"status": "demo", "companies": 10, "products": 50, "sales": 200}
+def get_stats():
+    """Get demo statistics"""
+    companies = get_demo_companies()
+    products = get_demo_products()
+    return {
+        "status": "demo_mode",
+        "companies": len(companies),
+        "products": len(products),
+        "sales": 500,
+        "note": "Using demo data - no database connection required"
+    }
     
     try:
         async with db_pool.acquire() as conn:
@@ -294,11 +218,10 @@ def get_fallback_recommendations(company_name: str, product_name: str, available
 def check_api_status():
     """Check if the system is properly configured"""
     has_groq = groq_client is not None
-    has_db = db_pool is not None
     
     return {
         "ai_enabled": has_groq,
-        "database": "Connected" if has_db else "Demo Mode",
+        "database": "Demo Mode",
         "status": "ready"
     }
 
@@ -306,18 +229,12 @@ def check_api_status():
 @st.cache_data
 def get_companies():
     """Get companies with caching"""
-    try:
-        return asyncio.run(get_companies_from_db())
-    except Exception:
-        return get_demo_companies()
+    return get_demo_companies()
 
 @st.cache_data
 def get_products():
     """Get products with caching"""
-    try:
-        return asyncio.run(get_products_from_db())
-    except Exception:
-        return get_demo_products()
+    return get_demo_products()
 
 def get_recommendations(company_name: str, product_name: str, num_recommendations: int):
     """Get product recommendations"""
@@ -347,7 +264,7 @@ def get_recommendations(company_name: str, product_name: str, num_recommendation
             "total_recommendations": len(recommended_products),
             "ai_used": ai_used,
             "method": "🤖 Groq AI" if ai_used else "⚙️ Fallback Logic",
-            "database": "PostgreSQL" if db_pool else "Demo Mode"
+            "database": "Demo Mode"
         }
     except Exception as e:
         return {"error": f"Error getting recommendations: {str(e)}"}
@@ -356,13 +273,8 @@ def main():
     st.title("🤖 AI-Powered Product Recommendation System")
     st.markdown("---")
     
-    # Initialize database connection
-    if db_pool is None:
-        with st.spinner("🔗 Connecting to database..."):
-            try:
-                asyncio.run(init_db_pool())
-            except Exception:
-                pass  # Will use demo mode
+    # Initialize demo mode
+    st.info("🎯 Running in Demo Mode - No database connection required")
     
     # Sidebar - Minimal status
     with st.sidebar:
@@ -378,15 +290,13 @@ def main():
         st.info(f"Database: {api_info['database']}")
         
         # Database Stats
-        try:
-            db_stats = asyncio.run(get_db_stats())
-            if db_stats and db_stats.get('status') in ['connected', 'demo']:
-                st.markdown("**📊 Database:**")
-                st.text(f"Companies: {db_stats.get('companies', 0)}")
-                st.text(f"Products: {db_stats.get('products', 0)}")
-                st.text(f"Sales: {db_stats.get('sales', 0)}")
-        except Exception:
-            st.text("Database: Demo Mode")
+        db_stats = get_stats()
+        if db_stats:
+            st.markdown("**📊 Database:**")
+            st.text(f"Companies: {db_stats.get('companies', 0)}")
+            st.text(f"Products: {db_stats.get('products', 0)}")
+            st.text(f"Sales: {db_stats.get('sales', 0)}")
+            st.text("Status: Demo Mode")
         
         st.markdown("---")
         st.markdown("**💡 Tips:**")
