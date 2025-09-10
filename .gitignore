@@ -88,17 +88,41 @@ logs/
 *.sqlite3
 *.sqlite
 
+# CSV Files (sensitive data)
+*.csv
+data/*.csv
+exports/*.csv
+uploads/*.csv
+
+# Test directory (contains development/testing files)
+tests/
+test_*.py
+*_test.py
+
 # Temporary files
 *.tmp
 *.temp
-*.test.py
-test_*.py
-*_test.py
 
 # API Keys (for security)
 # Uncomment if you want to exclude API keys
 # config.py
 # secrets.py
+
+# CRITICAL SECURITY - API Keys and Secrets
+*.key
+*.pem
+*.p12
+*.pfx
+secrets.json
+credentials.json
+service-account.json
+.env.staging
+.env.production
+api_keys.py
+config_local.py
+
+# Streamlit secrets (NEVER commit these)
+.streamlit/secrets.toml
 
 # FastAPI specific
 .pytest_cache/

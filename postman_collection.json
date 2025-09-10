@@ -1,0 +1,186 @@
+{
+  "info": {
+    "name": "Sales Recommendation API - PostgreSQL",
+    "description": "AI-Powered Product Recommendation API with PostgreSQL backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. API Status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8001/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8001",
+          "path": [""]
+        },
+        "description": "Get API status and first 10 companies"
+      }
+    },
+    {
+      "name": "2. Get All Companies",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8001/companies",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8001",
+          "path": ["companies"]
+        },
+        "description": "Get all 42,015 companies from PostgreSQL"
+      }
+    },
+    {
+      "name": "3. Recommend - Thermax VFD",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8001/recommend?company_name=Thermax&product_name=VFD",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8001",
+          "path": ["recommend"],
+          "query": [
+            {
+              "key": "company_name",
+              "value": "Thermax"
+            },
+            {
+              "key": "product_name",
+              "value": "VFD"
+            }
+          ]
+        },
+        "description": "AI recommendations for Thermax looking for VFD products"
+      }
+    },
+    {
+      "name": "4. Recommend - Danfoss Pump",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8001/recommend?company_name=Danfoss&product_name=Pump",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8001",
+          "path": ["recommend"],
+          "query": [
+            {
+              "key": "company_name",
+              "value": "Danfoss"
+            },
+            {
+              "key": "product_name",
+              "value": "Pump"
+            }
+          ]
+        },
+        "description": "AI recommendations for Danfoss looking for Pump products"
+      }
+    },
+    {
+      "name": "5. Recommend - Grundfos Heater",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8001/recommend?company_name=Grundfos&product_name=Heater",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8001",
+          "path": ["recommend"],
+          "query": [
+            {
+              "key": "company_name",
+              "value": "Grundfos"
+            },
+            {
+              "key": "product_name",
+              "value": "Heater"
+            }
+          ]
+        },
+        "description": "AI recommendations for Grundfos looking for Heater products"
+      }
+    },
+    {
+      "name": "6. Recommend - Amazon Boiler",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8001/recommend?company_name=Amazon&product_name=Boiler",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8001",
+          "path": ["recommend"],
+          "query": [
+            {
+              "key": "company_name",
+              "value": "Amazon"
+            },
+            {
+              "key": "product_name",
+              "value": "Boiler"
+            }
+          ]
+        },
+        "description": "AI recommendations for Amazon looking for Boiler products"
+      }
+    },
+    {
+      "name": "7. Database Statistics",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8001/db-stats",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8001",
+          "path": ["db-stats"]
+        },
+        "description": "Get database statistics (companies, products, sales counts)"
+      }
+    },
+    {
+      "name": "8. Custom Recommendation Test",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8001/recommend?company_name={{company}}&product_name={{product}}",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8001",
+          "path": ["recommend"],
+          "query": [
+            {
+              "key": "company_name",
+              "value": "{{company}}"
+            },
+            {
+              "key": "product_name",
+              "value": "{{product}}"
+            }
+          ]
+        },
+        "description": "Template for custom recommendations - replace {{company}} and {{product}} with your values"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8001",
+      "type": "string"
+    }
+  ]
+}
